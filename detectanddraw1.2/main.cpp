@@ -2,7 +2,6 @@
 #include<fstream>
 #include<time.h>
 #include"haarTraining.h"
-#include"classifier.h"
 #include"myIntergal.h"
 #include"delete.h"
 
@@ -17,33 +16,36 @@ static MyCascadeClassifier cascade;
 const char* cascade_name = "F:\\workplace\\test\\result\\2.1dt\\cascade.xml";
 //const char* cascade_name = "F:\\workplace\\visualstudio\\facesource\\testpic\\20180424_10001000\\casde.xml";
 //人脸检测要用到的分类器  
-void detect_and_draw(MyMat *img);
+void detect_and_draw(MyMat *img, Mat showpic);
 int main(int argc, char* argv[])
 {
 	cascade = readXML(cascade_name, cascade);
 	cout << cascade.StrongClassifier.size() << endl;
-	Mat picMat = imread("e:\\2.jpg", 0);
-	MyMat *tempMat = createMyMat(picMat.rows, picMat.cols, ONE_CHANNEL, UCHAR_TYPE);
-	tempMat = transMat(tempMat, "e:\\2.jpg");
-	detect_and_draw(tempMat);
+	Mat picMat = imread("e:\\50.jpg");
+	MyMat *outpic = createMyMat(picMat.rows, picMat.cols, ONE_CHANNEL, UCHAR_TYPE);
+	//bin_linear_scale(img, outpic, 450, 300);
+	outpic = transMatAndSmooth(outpic, "e:\\50.jpg");
+
+	if (outpic == nullptr)
+	{
+		cout << "图片不存在" << endl;
+		return 0;
+	}
+	detect_and_draw(outpic, picMat);
 	return 0;
 }
 
-void detect_and_draw(MyMat *img)
+void detect_and_draw(MyMat *img,Mat showpic)
 {
 	double start, end;
 	ofstream filePic;
 	FaceSeq *faces = NULL;
-	Mat picMat = imread("e:\\51.jpg");
-	MyMat *outpic = createMyMat(picMat.rows, picMat.cols, ONE_CHANNEL, UCHAR_TYPE);
-	//bin_linear_scale(img, outpic, 450, 300);
-	outpic = transMatAndSmooth(outpic, "e:\\51.jpg");
-	if (outpic == nullptr)
+	
+	if (img == nullptr)
 	{
 		cout << "图片不存在" << endl;
 		return;
 	}
-	Mat smallPic = transCvMat(outpic);
 	MySize minSize;
 	minSize.width = 19;
 	minSize.height = 19;
@@ -51,7 +53,7 @@ void detect_and_draw(MyMat *img)
 	maxSize.width = 500;
 	maxSize.height = 500;
 	start = clock();
-	faces = myHaarDetectObjectsShrink(outpic, cascade, 1.2,2, 0, minSize, maxSize);
+	faces = myHaarDetectObjectsShrink(img, cascade, 1.2,2, 0, minSize, maxSize);
 	end = clock();
 	cout << "耗时：" << (end - start) / CLOCKS_PER_SEC * 1000 << "ms" << endl;
 	filePic.open("E://faces.txt", ios::out);
@@ -69,7 +71,7 @@ void detect_and_draw(MyMat *img)
 		filePic << ",width:" << r.width;
 		r.height = faces->rect[i].height;
 		filePic << ",height:" << r.height;
-		rectangle(picMat, r, Scalar(0, 0, 255));
+		rectangle(showpic, r, Scalar(0, 0, 255));
 		//imshow("src", smallPic);
 		waitKey();
 		filePic << endl;
@@ -77,10 +79,10 @@ void detect_and_draw(MyMat *img)
 
 	filePic.close();
 
-	imshow("2", picMat);
+	imshow("result", showpic);
 	waitKey();
 	free(faces);
-	releaseMyMat(outpic);
+	releaseMyMat(img);
 
 }
 /*

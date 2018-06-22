@@ -8,7 +8,6 @@ using namespace tinyxml2;
 #include <math.h>
 #include"myIntergal.h"
 #include"delete.h"
-#include"classifier.h"
 #include <time.h>
 #include"RectLike.h"
 using namespace std;
@@ -23,6 +22,12 @@ using namespace std;
 #define RIGHT "right"
 #define THRESHOLD "threshold"
 #define NUMBER "number"
+#define DESC "desc"
+#define RECT "rect"
+#define RECT_0 "rect_0"
+#define RECT_1 "rect_1"
+#define RECT_2 "rect_2"
+#define TITLED "titled"
 #define BOUNDER_IGNORE 4       //忽略的边界像素
 #define POS_FLAG 1
 #define NEG_FLAG 2
@@ -906,7 +911,7 @@ int* predict(int* preResult, int pictureNum, CvIntHaarFeatures* haarFeatures, Cv
 *对图片进行预测
 */
 static
-int predictSignal(CvIntHaarFeatures* haarFeatures, MyMat* pic, MySize size, MyCascadeClassifier classifier)
+int predictSignal(MyMat* pic, MySize size, MyCascadeClassifier classifier)
 {
 	float scal = MAX(classifier.size.width / size.width * 1.0, classifier.size.height / size.height * 1.0, );
 	float h_scale_rate = size.height * 1.0 / classifier.size.height;
@@ -937,8 +942,9 @@ int predictSignal(CvIntHaarFeatures* haarFeatures, MyMat* pic, MySize size, MyCa
 		*/
 		for (int j = 0;j < classifier.StrongClassifier[i].classifier.size();j++)
 		{
-			int featureNum = classifier.StrongClassifier[i].classifier[j].compidx;
+			//int featureNum = classifier.StrongClassifier[i].classifier[j].compidx;
 			//cout << featureNum << " classifier.StrongClassifier[i].classifier[j].compidx" << endl;
+			/*
 			//重新构建haar特征
 			CvTHaarFeature haarFeature;
 			CvFastHaarFeature fastHaar;
@@ -966,8 +972,8 @@ int predictSignal(CvIntHaarFeatures* haarFeatures, MyMat* pic, MySize size, MyCa
 			//		cout << haarFeature.rect[0].r.x << ","<<haarFeatures->feature[featureNum].rect[0].r.x << endl;
 			icvConvertToFastHaarFeature(&haarFeature, &fastHaar, 1, size.width + 1);
 			//cout << fastHaar.rect[0].p0<<","<<haarFeatures->fastfeature[featureNum].rect[0].p0;
-
-			val = cvEvalFastHaarFeature2(fastHaar, pic->data.i, pic->data.i);
+			*/
+			val = cvEvalFastHaarFeature2(classifier.StrongClassifier[i].classifier[j].fasthaarDesc, pic->data.i, pic->data.i);
 			if ((classifier.StrongClassifier[i].classifier[j].left == 1) && (val < classifier.StrongClassifier[i].classifier[j].threshold))
 			{
 				predictSum = predictSum + classifier.StrongClassifier[i].classifier[j].error;
@@ -1147,24 +1153,126 @@ MyCascadeClassifier readXML(const char* xmlPath, MyCascadeClassifier &classifier
 		XMLElement* surface = strongClasssifer_root->FirstChildElement("weak");
 		while (surface)
 		{
-			MyStumpClassifier tempWeak;
-			// 遍历属性列表  
-			const XMLAttribute* surfaceAttr = surface->FirstAttribute();
-			while (surfaceAttr)
-			{
-				//	cout << surfaceAttr->Name() << ":" << surfaceAttr->Value() << "  ";
-				surfaceAttr = surfaceAttr->Next();
-			}
-
+			MyStumpClassifier tempWeak;			
 			// 遍历子元素  
 			XMLElement* surfaceChild = surface->FirstChildElement();
 			while (surfaceChild)
 			{
-				//	cout << surfaceChild->Name() << " = " << surfaceChild->GetText() << endl;
+				//	遍历fasthaar
 				if (strcmp(surfaceChild->Name(), HAARFEATUR) == 0)
 				{
-					tempWeak.compidx = atoi(surfaceChild->GetText());
-
+				//	tempWeak.compidx = atoi(surfaceChild->GetText());
+					XMLElement* surfaceSun = surfaceChild->FirstChildElement();
+					while (surfaceSun)
+					{
+						if (strcmp(surfaceSun->Name(), TITLED) == 0)
+						{
+							tempWeak.fasthaarDesc.tilted = atoi(surfaceSun->GetText());
+					
+						}
+						else if (strcmp(surfaceSun->Name(), RECT) == 0)
+						{
+							//遍历xml三个矩形
+							XMLElement* surfaceSunSun = surfaceSun->FirstChildElement();
+							while (surfaceSunSun)
+							{
+								if (strcmp(surfaceSunSun->Name(), RECT_0) == 0)
+								{
+									float point_data;
+									int count = 0;
+									string point_str;
+									point_str = surfaceSunSun->GetText();
+									stringstream input_0(point_str);
+									while (input_0 >> point_data)
+									{
+										switch (count)
+										{
+										case 0:
+											tempWeak.fasthaarDesc.rect[0].p0 = point_data;
+											break;
+										case 1:
+											tempWeak.fasthaarDesc.rect[0].p1 = point_data;
+											break;
+										case 2:
+											tempWeak.fasthaarDesc.rect[0].p2 = point_data;
+											break;
+										case 3:
+											tempWeak.fasthaarDesc.rect[0].p3 = point_data;
+										case 4:
+											tempWeak.fasthaarDesc.rect[0].weight = point_data;
+											break;
+											break;
+										}
+										count++;
+									}
+									
+								}
+								else if (strcmp(surfaceSunSun->Name(), RECT_1) == 0)
+								{
+									float point_data;
+									int count = 0;
+									string point_str;
+									point_str = surfaceSunSun->GetText();
+									stringstream input_0(point_str);
+									while (input_0 >> point_data)
+									{
+										switch (count)
+										{
+										case 0:
+											tempWeak.fasthaarDesc.rect[1].p0 = point_data;
+											break;
+										case 1:
+											tempWeak.fasthaarDesc.rect[1].p1 = point_data;
+											break;
+										case 2:
+											tempWeak.fasthaarDesc.rect[1].p2 = point_data;
+											break;
+										case 3:
+											tempWeak.fasthaarDesc.rect[1].p3 = point_data;
+											break;
+										case 4:
+											tempWeak.fasthaarDesc.rect[1].weight = point_data;
+											break;
+										}
+										count++;
+									}
+								}
+								else if (strcmp(surfaceSunSun->Name(), RECT_2) == 0)
+								{
+									float point_data;
+									int count = 0;
+									string point_str;
+									point_str = surfaceSunSun->GetText();
+									stringstream input_0(point_str);
+									while (input_0 >> point_data)
+									{
+										switch (count)
+										{
+										case 0:
+											tempWeak.fasthaarDesc.rect[2].p0 = point_data;
+											break;
+										case 1:
+											tempWeak.fasthaarDesc.rect[2].p1 = point_data;
+											break;
+										case 2:
+											tempWeak.fasthaarDesc.rect[2].p2 = point_data;
+											break;
+										case 3:
+											tempWeak.fasthaarDesc.rect[2].p3 = point_data;
+											break;
+										case 4:
+											tempWeak.fasthaarDesc.rect[2].weight = point_data;
+											break;
+										}
+										count++;
+									}
+								}
+								surfaceSunSun = surfaceSunSun->NextSiblingElement();
+							}
+						
+						}
+						surfaceSun = surfaceSun->NextSiblingElement();
+					}
 				}
 				else if (strcmp(surfaceChild->Name(), ERRORER) == 0)
 				{
@@ -1276,7 +1384,7 @@ FaceSeq* myHaarDetectObjects(MyMat *pic, MyCascadeClassifier classifer, float sc
 		//		imwrite(name,transCvMat(subWindow));
 				
 				//开始检测
-				if (predictSignal(haar_features, subWindowSum, currentSize, classifer))
+				if (predictSignal(subWindowSum, currentSize, classifer))
 					faces.push_back(tempRect);
 				releaseMyMat(subWindow);
 				releaseMyMat(subWindowSum);
@@ -1309,7 +1417,7 @@ FaceSeq* myHaarDetectObjectsShrink(MyMat *pic, MyCascadeClassifier classifer, fl
 	double start, end; //删除
 	FaceSeq *reFaces = NULL;
 	vector<MyRect> faces;
-	CvIntHaarFeatures* haar_features = NULL;
+//	CvIntHaarFeatures* haar_features = NULL;
 	MySize pic_size;
 	pic_size.width = pic->width;
 	pic_size.height = pic->height;
@@ -1322,7 +1430,7 @@ FaceSeq* myHaarDetectObjectsShrink(MyMat *pic, MyCascadeClassifier classifer, fl
 	
 	MyMat *tempSum = createMyMat(pic_size.height + 1, pic_size.width + 1, ONE_CHANNEL, INT_TYPE);//注意最后要释放,积分图
 
-	haar_features = icvCreateIntHaarFeatures(classifer_size, 0, 1); // 计算haar特征个数
+//	haar_features = icvCreateIntHaarFeatures(classifer_size, 0, 1); // 计算haar特征个数
 																	
 	float scal_width = maxSize.width / classifer_size.width;
 	float scal_height = maxSize.height / classifer_size.height;
@@ -1355,7 +1463,7 @@ FaceSeq* myHaarDetectObjectsShrink(MyMat *pic, MyCascadeClassifier classifer, fl
 	//	MyMat *outPicSum = createMyMat(height+1, width+1, ONE_CHANNEL, INT_TYPE); //缩小后积分图
 		bin_linear_scale(pic, outPic, width, height);  //缩小图像
 	//	x_step = (current_scal > 2 ? 1 : 2);
-		y_step = (current_scal > 2 ? 1 : 2);
+	//	y_step = (current_scal > 2 ? 1 : 2);
 	//	GetGrayIntegralImage(outPic->data.ptr, outPicSum->data.i, width, height, outPic->step); //计算积分图
 		for (int i = 0;i < outPic->height - classifer_size.height - 1;i = i + x_step)
 		{
@@ -1377,7 +1485,7 @@ FaceSeq* myHaarDetectObjectsShrink(MyMat *pic, MyCascadeClassifier classifer, fl
 				}	
 				GetGrayIntegralImage(subWindow->data.ptr, subWindowSum->data.i, subWindow->width, subWindow->height, subWindow->step);				
 				//开始检测	
-				int result = predictSignal(haar_features, subWindowSum, classifer_size, classifer);
+				int result = predictSignal(subWindowSum, classifer_size, classifer);
 				if (result == 1)
 				{
 					MyRect tempRect;
@@ -1421,7 +1529,7 @@ FaceSeq* myHaarDetectObjectsShrink(MyMat *pic, MyCascadeClassifier classifer, fl
 		reFaces->rect[i] = faces[i];
 	*/
 	//计算积分图
-	icvReleaseIntHaarFeatures(&haar_features);
+	//icvReleaseIntHaarFeatures(&haar_features);
 
 
 	return reFaces;

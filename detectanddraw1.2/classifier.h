@@ -1,6 +1,7 @@
 #pragma once
 #include <cmath>
 #include"basicStruct.h"
+
 /*
 *弱分类器结构体
 */

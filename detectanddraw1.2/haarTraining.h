@@ -4,7 +4,6 @@
 #include <cassert>
 #include <cstring>
 #include <cstdio>
-#include"classifier.h"
 #define CV_HAAR_FEATURE_MAX      3
 #define CV_HAAR_FEATURE_DESC_MAX 20
 #define CV_DEFAULT(val) = val
@@ -104,6 +103,37 @@ typedef struct FaceSeq  //人脸队列
 	MyRect *rect;
 };
 
+/*
+*弱分类器结构体
+*/
+typedef struct MyStumpClassifier
+{
+	int compidx;
+	CvFastHaarFeature fasthaarDesc;
+	float lerror; /* impurity of the right node */
+	float rerror; /* impurity of the left  node */
+	float error; /* 总的错误率*/
+	float threshold;
+	float left;
+	float right;
+} MyStumpClassifier;
+
+typedef struct MyCARTClassifier
+{
+	/* number of internal nodes */
+	int count;
+	/* internal nodes (each array of <count> elements) */
+	vector<MyStumpClassifier> classifier;
+	float threshold;
+} MyCARTClassifier;
+
+typedef struct MyCascadeClassifier
+{
+	/* size of classifier */
+	MySize size;
+	/* internal nodes (each array of <count> elements) */
+	vector<MyCARTClassifier> StrongClassifier;
+} MyCascadeClassifier;
 /*
 *
 * haar 训练主要过程
