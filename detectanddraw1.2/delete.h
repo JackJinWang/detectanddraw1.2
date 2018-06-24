@@ -44,6 +44,7 @@ inline MyMat* transMatAndSmooth(MyMat * result, char *picName)
 	}
 	Mat out;
 	blur(img, out, Size(3, 3));
+	//equalizeHist(out, out);
 	uchar *temp;
 	for (int i = 0; i < height; i++)
 	{

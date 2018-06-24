@@ -8,9 +8,13 @@ using namespace tinyxml2;
 #include <math.h>
 #include"myIntergal.h"
 #include"delete.h"
+#include <omp.h>
 #include <time.h>
 #include"RectLike.h"
 using namespace std;
+
+
+
 /*
 *
 * define xml name
@@ -1414,7 +1418,7 @@ FaceSeq* myHaarDetectObjects(MyMat *pic, MyCascadeClassifier classifer, float sc
 FaceSeq* myHaarDetectObjectsShrink(MyMat *pic, MyCascadeClassifier classifer, float scale, 
 	int neighbor, int type, MySize minSize, MySize maxSize)
 {
-	double start, end; //删除
+
 	FaceSeq *reFaces = NULL;
 	vector<MyRect> faces;
 //	CvIntHaarFeatures* haar_features = NULL;
@@ -1443,6 +1447,7 @@ FaceSeq* myHaarDetectObjectsShrink(MyMat *pic, MyCascadeClassifier classifer, fl
 	//图像缩小
 	int y_step = 1;
 	int x_step = 1;
+
 	for (current_scal = 1.0;;current_scal *= scale)
 	{
 	//	cout << current_scal << endl;
@@ -1463,8 +1468,10 @@ FaceSeq* myHaarDetectObjectsShrink(MyMat *pic, MyCascadeClassifier classifer, fl
 	//	MyMat *outPicSum = createMyMat(height+1, width+1, ONE_CHANNEL, INT_TYPE); //缩小后积分图
 		bin_linear_scale(pic, outPic, width, height);  //缩小图像
 	//	x_step = (current_scal > 2 ? 1 : 2);
-	//	y_step = (current_scal > 2 ? 1 : 2);
+		y_step = (current_scal > 2 ? 1 : 2);
 	//	GetGrayIntegralImage(outPic->data.ptr, outPicSum->data.i, width, height, outPic->step); //计算积分图
+		omp_set_num_threads(16);         //开启并行计算
+#pragma omp parallel for
 		for (int i = 0;i < outPic->height - classifer_size.height - 1;i = i + x_step)
 		{
 			for (int j = 0;j < outPic->width - classifer_size.width - 1;j = j + y_step)
@@ -1472,7 +1479,7 @@ FaceSeq* myHaarDetectObjectsShrink(MyMat *pic, MyCascadeClassifier classifer, fl
 				
 			//	cout << "开始截取"<< endl;
 			//	cout << "i" << i << ",j" << j << endl;
-				
+
 				MyMat *subWindow = createMyMat(classifer_size.height, classifer_size.width, ONE_CHANNEL, UCHAR_TYPE);//注意释放
 				MyMat *subWindowSum = createMyMat(classifer_size.height + 1, classifer_size.width + 1, ONE_CHANNEL, INT_TYPE);//注意释放
 				//截取子窗口
@@ -1484,8 +1491,11 @@ FaceSeq* myHaarDetectObjectsShrink(MyMat *pic, MyCascadeClassifier classifer, fl
 
 				}	
 				GetGrayIntegralImage(subWindow->data.ptr, subWindowSum->data.i, subWindow->width, subWindow->height, subWindow->step);				
+
 				//开始检测	
 				int result = predictSignal(subWindowSum, classifer_size, classifer);
+			
+				
 				if (result == 1)
 				{
 					MyRect tempRect;
@@ -1495,10 +1505,13 @@ FaceSeq* myHaarDetectObjectsShrink(MyMat *pic, MyCascadeClassifier classifer, fl
 					tempRect.height = classifer_size.height * current_scal;
 					faces.push_back(tempRect);
 					labels.push_back(count);
+					/*
 					char name[100];
 					sprintf(name,"e:\\res5\\%d.png",count);
 					imwrite(name,transCvMat(subWindow));
+					*/
 					count++;
+					
 					
 
 				}
@@ -1511,7 +1524,7 @@ FaceSeq* myHaarDetectObjectsShrink(MyMat *pic, MyCascadeClassifier classifer, fl
 
 	}
 	
-	RectLike rLike(0.1);
+	RectLike rLike(0.2);
 	vector <MyRect>mergefaces;   //合并后的人脸
 	int mecount = rLike.Disjoint_set_merge2(neighbor,faces, mergefaces, labels, rLike);
 	//转化

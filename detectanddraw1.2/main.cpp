@@ -13,7 +13,8 @@ static MyCascadeClassifier cascade;
 //const char* cascade_name = "F:\\workplace\\visualstudio\\facesource\\testpic\\jilianre\\cascade.xml";
 
 //const char* cascade_name = "F:\\workplace\\visualstudio\\facesource\\testpic\\1.7dt\\cascade.xml";
-const char* cascade_name = "F:\\workplace\\test\\result\\2.1dt\\cascade.xml";
+//const char* cascade_name = "F:\\workplace\\test\\result\\2.1dt1\\cascade.xml";  //可用
+const char* cascade_name = "E:\\1.7dt\\cascade.xml";
 //const char* cascade_name = "F:\\workplace\\visualstudio\\facesource\\testpic\\20180424_10001000\\casde.xml";
 //人脸检测要用到的分类器  
 void detect_and_draw(MyMat *img, Mat showpic);
@@ -21,10 +22,10 @@ int main(int argc, char* argv[])
 {
 	cascade = readXML(cascade_name, cascade);
 	cout << cascade.StrongClassifier.size() << endl;
-	Mat picMat = imread("e:\\50.jpg");
+	Mat picMat = imread("e:\\57.jpg");
 	MyMat *outpic = createMyMat(picMat.rows, picMat.cols, ONE_CHANNEL, UCHAR_TYPE);
 	//bin_linear_scale(img, outpic, 450, 300);
-	outpic = transMatAndSmooth(outpic, "e:\\50.jpg");
+	outpic = transMatAndSmooth(outpic, "e:\\57.jpg");
 
 	if (outpic == nullptr)
 	{
@@ -53,7 +54,7 @@ void detect_and_draw(MyMat *img,Mat showpic)
 	maxSize.width = 500;
 	maxSize.height = 500;
 	start = clock();
-	faces = myHaarDetectObjectsShrink(img, cascade, 1.2,2, 0, minSize, maxSize);
+	faces = myHaarDetectObjectsShrink(img, cascade, 1.2,4, 0, minSize, maxSize);
 	end = clock();
 	cout << "耗时：" << (end - start) / CLOCKS_PER_SEC * 1000 << "ms" << endl;
 	filePic.open("E://faces.txt", ios::out);
