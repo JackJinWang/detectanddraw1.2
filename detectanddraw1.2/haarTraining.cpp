@@ -1144,7 +1144,10 @@ MyCascadeClassifier readXML(const char* xmlPath, MyCascadeClassifier &classifier
 	XMLElement* stage_number_root = root->FirstChildElement("stage_number");
 	stage_number = atoi(stage_number_root->GetText());
 	char stageName[100];
-	
+#ifdef _OPENMP
+	omp_set_num_threads(THREAD_NUMBER);         //开启并行计算
+#pragma omp parallel for
+#endif // _OPENMP
 	for (int i = 0;i < stage_number;i++)
 	{
 		MyCARTClassifier tempStrong;
@@ -1450,7 +1453,7 @@ FaceSeq* myHaarDetectObjectsShrink(MyMat *pic, MyCascadeClassifier classifer, fl
 
 	for (current_scal = 1.0;;current_scal *= scale)
 	{
-	//	cout << current_scal << endl;
+//		cout << current_scal << endl;
 		if (((classifer_size.width * current_scal) > (maxSize.width )) || ((classifer_size.height * current_scal) > (maxSize.height )))
 		{
 
@@ -1468,10 +1471,12 @@ FaceSeq* myHaarDetectObjectsShrink(MyMat *pic, MyCascadeClassifier classifer, fl
 	//	MyMat *outPicSum = createMyMat(height+1, width+1, ONE_CHANNEL, INT_TYPE); //缩小后积分图
 		bin_linear_scale(pic, outPic, width, height);  //缩小图像
 	//	x_step = (current_scal > 2 ? 1 : 2);
-		y_step = (current_scal > 2 ? 1 : 2);
+		y_step = (current_scal > 2 ? 1 : 3);
 	//	GetGrayIntegralImage(outPic->data.ptr, outPicSum->data.i, width, height, outPic->step); //计算积分图
-		omp_set_num_threads(16);         //开启并行计算
+#ifdef _OPENMP
+		omp_set_num_threads(THREAD_NUMBER);         //开启并行计算
 #pragma omp parallel for
+#endif // _OPENMP
 		for (int i = 0;i < outPic->height - classifer_size.height - 1;i = i + x_step)
 		{
 			for (int j = 0;j < outPic->width - classifer_size.width - 1;j = j + y_step)

@@ -22,10 +22,12 @@ int main(int argc, char* argv[])
 {
 	cascade = readXML(cascade_name, cascade);
 	cout << cascade.StrongClassifier.size() << endl;
-	Mat picMat = imread("e:\\57.jpg");
+	//图片检测
+	
+	Mat picMat = imread("e:\\56.jpg");
 	MyMat *outpic = createMyMat(picMat.rows, picMat.cols, ONE_CHANNEL, UCHAR_TYPE);
 	//bin_linear_scale(img, outpic, 450, 300);
-	outpic = transMatAndSmooth(outpic, "e:\\57.jpg");
+	outpic = transMatAndSmooth(outpic, "e:\\56.jpg");
 
 	if (outpic == nullptr)
 	{
@@ -33,6 +35,39 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 	detect_and_draw(outpic, picMat);
+	
+
+	/*
+	Mat frame;
+	Mat grayImage, cannyImage;
+	bool stop = true;
+
+	VideoCapture capture(0);//打开摄像头  
+	if (!capture.isOpened())
+	{
+		cout << "读摄像头有误" << endl;
+		return -1;
+	}
+	while (stop)
+	{
+		capture >> frame;//读取当前帧到frame矩阵中  
+		cvtColor(frame, grayImage, CV_BGR2GRAY);//转为灰度图  
+		MyMat *outpic = createMyMat(grayImage.rows, grayImage.cols, ONE_CHANNEL, UCHAR_TYPE);
+		//bin_linear_scale(img, outpic, 450, 300);
+		outpic = transMatAndSmooth(outpic, grayImage);
+		if (outpic == nullptr)
+		{
+			cout << "图片不存在" << endl;
+			return 0;
+		}
+		detect_and_draw(outpic, frame);
+		//imshow("result", frame);
+		if (waitKey(30) >= 0)
+			stop = false;
+	}
+	*/
+	
+	
 	return 0;
 }
 
@@ -54,31 +89,31 @@ void detect_and_draw(MyMat *img,Mat showpic)
 	maxSize.width = 500;
 	maxSize.height = 500;
 	start = clock();
-	faces = myHaarDetectObjectsShrink(img, cascade, 1.2,4, 0, minSize, maxSize);
+	faces = myHaarDetectObjectsShrink(img, cascade, 1.2,5, 0, minSize, maxSize);
 	end = clock();
 	cout << "耗时：" << (end - start) / CLOCKS_PER_SEC * 1000 << "ms" << endl;
-	filePic.open("E://faces.txt", ios::out);
+	//filePic.open("E://faces.txt", ios::out);
 
 	for (int i = 0; i <faces->count; i++)
 	{
 		CvPoint center;
 		Rect r;
-		filePic << i << ": ";
+	//	filePic << i << ": ";
 		r.x = faces->rect[i].y;
-		filePic << "x:" << r.x;
+	//	filePic << "x:" << r.x;
 		r.y = faces->rect[i].x;
-		filePic << ",y:" << r.y;
+	//	filePic << ",y:" << r.y;
 		r.width = faces->rect[i].width;
-		filePic << ",width:" << r.width;
+//		filePic << ",width:" << r.width;
 		r.height = faces->rect[i].height;
-		filePic << ",height:" << r.height;
+//		filePic << ",height:" << r.height;
 		rectangle(showpic, r, Scalar(0, 0, 255));
 		//imshow("src", smallPic);
-		waitKey();
-		filePic << endl;
+//		waitKey();
+//		filePic << endl;
 	}
 
-	filePic.close();
+//	filePic.close();
 
 	imshow("result", showpic);
 	waitKey();

@@ -7,6 +7,7 @@ Description:基本参数
 #include<vector>
 
 using namespace std;
+#define THREAD_NUMBER 8
 #define THREE_CHANNEL 3 //三通道
 #define ONE_CHANNEL 1  //一通道
 

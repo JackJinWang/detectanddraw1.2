@@ -170,6 +170,7 @@ int RectLike::Disjoint_set_merge2(int min_neighber, vector<MyRect> rects, vector
 	comps = (MyAvgComp*)malloc((count + 1) * sizeof(comps[0])); // 
 	memset(comps, 0, (count + 1) * sizeof(comps[0]));
 	// count number of neighbors
+
 	for (int i = 0; i < labels.size(); i++)
 	{
 		MyRect r1 = rects[i];
